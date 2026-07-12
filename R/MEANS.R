@@ -4,7 +4,7 @@
 #' @param variable Nome da coluna numérica (string).
 #' @return Tibble com média, desvio padrão, mediana, mínimo e máximo.
 #' @export
-resumo_stats <- function(banco, coluna, na.rm = TRUE) {
+MEANS <- function(banco, coluna, na.rm = TRUE) {
   
   # Extrair a coluna
   x <- banco[[coluna]]
