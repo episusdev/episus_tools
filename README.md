@@ -1,6 +1,6 @@
 # episus_tools
 
-`episusTools` é um pacote de utilitários para análise epidemiológica, com funções desenvolvidas para treinandos do EpiSUS e analistas de dados em saúde.
+`episus_tools` é um pacote de utilitários para análise epidemiológica, com funções desenvolvidas para treinandos do EpiSUS e analistas de dados em saúde.
 
 ## Instalação
 
