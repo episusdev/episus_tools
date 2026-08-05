@@ -43,3 +43,11 @@ iris = iris|>
 - `DESCRIPTION`: metadados do pacote.
 - `NAMESPACE`: exportações e imports.
 - `LICENSE`: licença MIT.
+
+## Kit de Auditoria de Dados
+
+Além das funções do pacote, este repositório inclui o **`kit_auditoria_dados/`**:
+um template Quarto parametrizado para auditoria reprodutível de qualidade de
+dados em saúde pública (dados ausentes, duplicatas, distribuições, validação por
+regras). Veja o [README do kit](kit_auditoria_dados/README.md) para instruções
+de uso.

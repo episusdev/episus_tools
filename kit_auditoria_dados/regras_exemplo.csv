@@ -1,0 +1,11 @@
+variavel,tipo,valor,severidade,descricao
+NU_IDADE_N,range,"0,999",erro,Idade deve estar entre 0 e 999
+CS_SEXO,allowed_values,"M,F,I",erro,Sexo deve ser M (masculino) F (feminino) ou I (ignorado)
+CS_GESTANT,allowed_values,"1,2,3,4,5,6,9",aviso,Gestante deve ter código válido
+ID_AGRAVO,not_null,,erro,Código do agravo não pode ser nulo
+DT_NOTIFIC,not_null,,erro,Data de notificação não pode ser nula
+NU_ANO,range,"2000,2030",erro,Ano deve estar entre 2000 e 2030
+CS_RACA,allowed_values,"1,2,3,4,5,9",aviso,Raça/cor deve ter código válido (1-5 ou 9 ignorado)
+CS_ESCOL_N,allowed_values,"0,1,2,3,4,5,6,7,8,9",aviso,Escolaridade deve ter código válido
+FORMACLINI,allowed_values,"1,2,3",aviso,Forma clínica deve ser 1 2 ou 3
+TPALTA_N,allowed_values,"1,2,3,4,5,6,7,8,9",aviso,Tipo de alta deve ter código válido

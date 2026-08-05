@@ -4,3 +4,4 @@
 ^\.DS_Store$
 ^\.git$
 ^__pycache__$
+^kit_auditoria_dados$

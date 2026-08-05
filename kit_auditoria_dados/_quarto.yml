@@ -1,0 +1,16 @@
+project:
+  type: default
+
+# Codificação UTF-8 global — corrige acentos e ç em todo o projeto
+lang: pt-BR
+encoding: UTF-8
+
+format:
+  html:
+    charset: UTF-8
+    lang: pt-BR
+
+knitr:
+  opts_chunk:
+    dev: "png"
+    dpi: 150

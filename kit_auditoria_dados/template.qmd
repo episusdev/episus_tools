@@ -1,0 +1,408 @@
+---
+title: "📋 Relatório de Auditoria de Qualidade de Dados"
+subtitle: "Análise sistemática e reprodutível"
+date: today
+date-format: "DD/MM/YYYY HH:mm"
+lang: pt-BR
+encoding: UTF-8
+
+params:
+  data_path:   "Base_de_dados.csv"
+  id_var:      "ID_MUNICIP"
+  group_var:   "SG_UF_NOT"
+  rules_path:  "regras_exemplo.csv"
+  top_n_cat:   10
+  titulo_base: "Base de Notificações Individuais"
+
+format:
+  html:
+    theme:         cosmo
+    charset:       UTF-8
+    toc:           true
+    toc-depth:     3
+    toc-title:     "Sumário"
+    toc-location:  left
+    number-sections: true
+    code-fold:     true
+    code-summary:  "Ver código"
+    embed-resources: true
+    smooth-scroll: true
+    df-print:      paged
+    fig-width:     9
+    fig-height:    5
+    css: estilo.css
+
+execute:
+  echo:    false
+  warning: false
+  message: false
+---
+
+```{r setup, include=FALSE}
+# ── Codificação UTF-8 (corrige acentos e ç no relatório) ─────────────────────
+options(encoding = "UTF-8")
+Sys.setlocale("LC_ALL", "pt_BR.UTF-8")   # Linux/Mac
+# Sys.setlocale("LC_ALL", "Portuguese_Brazil.1252")  # Windows: descomente esta linha
+knitr::opts_chunk$set(
+  echo    = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  dev     = "png",
+  dpi     = 150
+)
+
+# ── Pacotes ──────────────────────────────────────────────────────────────────
+pacotes <- c("tidyverse","lubridate","skimr","DT","knitr","kableExtra",
+             "glue","patchwork","scales","sessioninfo","readxl","readr",
+             "purrr","viridis","naniar")
+
+novos <- pacotes[!sapply(pacotes, requireNamespace, quietly = TRUE)]
+if (length(novos) > 0) install.packages(novos, repos = "https://cloud.r-project.org")
+invisible(lapply(pacotes, library, character.only = TRUE))
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+for (arq in list.files("R", pattern = "\\.R$", full.names = TRUE)) source(arq)
+
+# ── Parâmetros ────────────────────────────────────────────────────────────────
+DATA_PATH  <- params$data_path
+ID_VAR     <- params$id_var
+GROUP_VAR  <- params$group_var
+RULES_PATH <- params$rules_path
+TOP_N_CAT  <- params$top_n_cat
+TITULO     <- params$titulo_base
+
+# ── Carregar dados ────────────────────────────────────────────────────────────
+dados <- carregar_dados(DATA_PATH, id_var = ID_VAR)
+```
+
+::: {.callout-note icon="false"}
+## Sobre este relatório
+
+**Base analisada:** `r TITULO`  
+**Arquivo:** `r DATA_PATH`  
+**Data/hora:** `r format(Sys.time(), "%d/%m/%Y às %H:%M")`  
+**Variável de ID:** `r ifelse(is.null(ID_VAR), "—", ID_VAR)`  
+**Variável de grupo:** `r ifelse(is.null(GROUP_VAR), "—", GROUP_VAR)`
+:::
+
+---
+
+# Visão Geral da Base {#sec-visao-geral}
+
+```{r metricas-topo}
+vg <- visao_geral(dados)
+```
+
+::: {.columns}
+::: {.column width="25%"}
+<div class="metric-box blue">
+  <div class="metric-value">`r format(vg$n_linhas, big.mark = ".")`</div>
+  <div class="metric-label">Registros</div>
+</div>
+:::
+::: {.column width="25%"}
+<div class="metric-box teal">
+  <div class="metric-value">`r vg$n_colunas`</div>
+  <div class="metric-label">Variáveis</div>
+</div>
+:::
+::: {.column width="25%"}
+<div class="metric-box orange">
+  <div class="metric-value">`r vg$pct_missing`%</div>
+  <div class="metric-label">% Ausentes (global)</div>
+</div>
+:::
+::: {.column width="25%"}
+<div class="metric-box red">
+  <div class="metric-value">`r format(vg$n_dup, big.mark = ".")`</div>
+  <div class="metric-label">Duplicatas Exatas</div>
+</div>
+:::
+:::
+
+## Composição de Tipos de Variáveis
+
+```{r tipos-grafico}
+tipos_df <- tibble::tibble(
+  Tipo  = c("Numérica", "Caractere", "Data", "Lógica", "Fator"),
+  Qtd   = c(vg$n_numeric, vg$n_char, vg$n_date, vg$n_logical, vg$n_factor)
+) |> dplyr::filter(Qtd > 0)
+
+ggplot2::ggplot(tipos_df, ggplot2::aes(x = reorder(Tipo, Qtd), y = Qtd, fill = Tipo)) +
+  ggplot2::geom_col(show.legend = FALSE, width = 0.6) +
+  ggplot2::geom_text(ggplot2::aes(label = Qtd), hjust = -0.2, size = 4) +
+  ggplot2::coord_flip() +
+  ggplot2::scale_fill_manual(values = c(
+    "Numérica"  = "#2E86AB",
+    "Caractere" = "#A23B72",
+    "Data"      = "#3BB273",
+    "Lógica"    = "#F18F01",
+    "Fator"     = "#6C757D"
+  )) +
+  ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, 0.15))) +
+  ggplot2::labs(title = "Quantidade de Variáveis por Tipo",
+               x = NULL, y = "Quantidade") +
+  ggplot2::theme_minimal(base_size = 13)
+```
+
+## Resumo Estatístico Completo (skimr)
+
+```{r skim}
+skimr::skim(dados)
+```
+
+## Tabela de Tipos e Completude
+
+```{r tabela-tipos}
+tabela_tipos(dados) |>
+  tabela_bonita(caption = "Visão geral por variável")
+```
+
+---
+
+# Análise de Dados Ausentes {#sec-ausencia}
+
+```{r ausencia-intro}
+n_vars_ausentes <- sum(sapply(dados, function(x) any(is.na(x))))
+```
+
+::: {.callout-warning}
+**`r n_vars_ausentes` variáveis** possuem pelo menos um valor ausente (de `r vg$n_colunas` no total).
+:::
+
+## Tabela de Ausência por Variável
+
+```{r tabela-ausencia}
+tab_aus <- tabela_ausencia(dados)
+if (nrow(tab_aus) > 0) {
+  tab_aus |>
+    dplyr::mutate(
+      Pct_Ausente = dplyr::case_when(
+        Pct_Ausente >= 50 ~ paste0("🔴 ", Pct_Ausente, "%"),
+        Pct_Ausente >= 20 ~ paste0("🟡 ", Pct_Ausente, "%"),
+        TRUE               ~ paste0("🟢 ", Pct_Ausente, "%")
+      )
+    ) |>
+    tabela_bonita(caption = "Variáveis com dados ausentes (ordenadas por %)")
+} else {
+  cat("✅ Nenhum dado ausente encontrado!")
+}
+```
+
+## Gráfico de Barras — Ausência
+
+```{r grafico-ausencia-barras, fig.height=8}
+grafico_ausencia_barra(dados, top_n = 30)
+```
+
+## Mapa de Ausência (vis-miss)
+
+```{r mapa-ausencia, fig.height=6}
+vars_com_ausentes <- names(dados)[sapply(dados, function(x) any(is.na(x)))]
+if (length(vars_com_ausentes) > 0) {
+  naniar::vis_miss(
+    dados[, head(vars_com_ausentes, 35)],
+    warn_large_data = FALSE
+  ) +
+    ggplot2::labs(title = "Mapa de Ausência por Variável") +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 60, hjust = 1, size = 8))
+}
+```
+
+## Ausência por Grupo
+
+```{r ausencia-grupo}
+if (!is.null(GROUP_VAR) && GROUP_VAR %in% names(dados)) {
+  aus_grp <- dados |>
+    dplyr::group_by(.data[[GROUP_VAR]]) |>
+    dplyr::summarise(
+      N = dplyr::n(),
+      dplyr::across(
+        dplyr::all_of(head(names(dados)[sapply(dados, function(x) any(is.na(x)))], 10)),
+        ~ round(mean(is.na(.)) * 100, 1)
+      ),
+      .groups = "drop"
+    )
+  tabela_bonita(aus_grp, caption = glue::glue("% de ausência por '{GROUP_VAR}'"))
+} else {
+  cat("Variável de grupo não definida ou não encontrada.")
+}
+```
+
+---
+
+# Detecção de Duplicatas {#sec-duplicatas}
+
+```{r duplicatas}
+dup <- resumo_duplicatas(dados, id_var = ID_VAR)
+```
+
+## Duplicatas Exatas
+
+::: {.callout-`r ifelse(dup$exatas$n_duplicatas > 0, "warning", "note")`}
+**`r dup$exatas$n_duplicatas`** linhas duplicadas exatas encontradas
+(`r round(dup$exatas$n_duplicatas / nrow(dados) * 100, 2)`% dos registros).
+:::
+
+```{r tabela-dup-exatas}
+if (!is.null(dup$exatas$linhas) && nrow(dup$exatas$linhas) > 0) {
+  dup$exatas$linhas |>
+    head(200) |>
+    tabela_bonita(caption = "Linhas com duplicatas exatas (max 200 exibidas)")
+} else {
+  cat("✅ Nenhuma duplicata exata encontrada.")
+}
+```
+
+## Duplicatas por ID (`r ifelse(is.null(ID_VAR), "—", ID_VAR)`)
+
+```{r dup-por-id}
+if (!is.null(dup$por_id)) {
+  if (dup$por_id$n_ids_dup > 0) {
+    cat(glue::glue("**{dup$por_id$n_ids_dup}** IDs aparecem mais de uma vez.\n\n"))
+    dup$por_id$tabela |>
+      head(100) |>
+      tabela_bonita(caption = "IDs duplicados (top 100)")
+  } else {
+    cat("✅ Nenhum ID duplicado encontrado.")
+  }
+} else {
+  cat("Variável de ID não especificada.")
+}
+```
+
+---
+
+# Distribuições Numéricas {#sec-numericas}
+
+## Tabela de Estatísticas Descritivas
+
+```{r tabela-numericas}
+res_num <- resumo_numericas(dados)
+if (!is.null(res_num)) {
+  res_num |>
+    dplyr::mutate(
+      Outliers_Inf = dplyr::case_when(
+        Outliers_Inf > 0 ~ paste0("⚠️ ", Outliers_Inf),
+        TRUE             ~ "✅ 0"
+      ),
+      Outliers_Sup = dplyr::case_when(
+        Outliers_Sup > 0 ~ paste0("⚠️ ", Outliers_Sup),
+        TRUE             ~ "✅ 0"
+      )
+    ) |>
+    tabela_bonita(caption = "Estatísticas descritivas com detecção de outliers")
+} else {
+  cat("Nenhuma variável numérica encontrada.")
+}
+```
+
+## Boxplots
+
+```{r boxplots, fig.height=6}
+grafico_boxplot_numericas(dados, max_vars = 12)
+```
+
+---
+
+# Tabelas de Frequência Categórica {#sec-categoricas}
+
+```{r freq-cats}
+freq_cat <- frequencia_categoricas(dados, top_n = TOP_N_CAT)
+```
+
+```{r render-cats, results='asis'}
+if (!is.null(freq_cat) && length(freq_cat) > 0) {
+  for (nm in names(freq_cat)) {
+    cat(glue::glue("\n\n## `{nm}`\n\n"))
+    tab <- freq_cat[[nm]]$tabela
+    tbl <- knitr::kable(tab, format = "html",
+                        caption = glue::glue("Frequência: {nm}")) |>
+      kableExtra::kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                                full_width = FALSE)
+    print(tbl)
+  }
+} else {
+  cat("Nenhuma variável categórica encontrada.")
+}
+```
+
+---
+
+# Validação por Regras {#sec-regras}
+
+```{r validacao}
+if (file.exists(RULES_PATH)) {
+  res_regras <- aplicar_regras(dados, RULES_PATH)
+} else {
+  res_regras <- NULL
+}
+```
+
+```{r render-regras}
+if (!is.null(res_regras)) {
+  n_erros  <- sum(grepl("ERRO",  res_regras$Status))
+  n_avisos <- sum(grepl("AVISO", res_regras$Status))
+  n_ok     <- sum(grepl("OK",    res_regras$Status))
+} else {
+  n_erros <- n_avisos <- n_ok <- 0
+}
+```
+
+::: {.columns}
+::: {.column width="33%"}
+<div class="metric-box red">
+  <div class="metric-value">`r n_erros`</div>
+  <div class="metric-label">Regras com ERRO</div>
+</div>
+:::
+::: {.column width="33%"}
+<div class="metric-box orange">
+  <div class="metric-value">`r n_avisos`</div>
+  <div class="metric-label">Regras com AVISO</div>
+</div>
+:::
+::: {.column width="33%"}
+<div class="metric-box teal">
+  <div class="metric-value">`r n_ok`</div>
+  <div class="metric-label">Regras OK</div>
+</div>
+:::
+:::
+
+```{r tabela-regras}
+if (!is.null(res_regras)) {
+  res_regras |>
+    tabela_bonita(caption = "Resultado da validação por regras")
+} else {
+  cat("ℹ️ Nenhum arquivo de regras encontrado em: ", RULES_PATH)
+}
+```
+
+---
+
+# Dicionário de Dados {#sec-dicionario}
+
+```{r dicionario}
+gerar_dicionario(dados) |>
+  tabela_bonita(caption = "Dicionário de dados gerado automaticamente")
+```
+
+---
+
+# Rodapé de Reprodutibilidade {#sec-rodape}
+
+```{r rodape, results='asis'}
+rodape_reproducibilidade()
+```
+
+::: {.callout-tip}
+## Como reproduzir este relatório
+
+```bash
+quarto render template.qmd \
+  -P data_path:Base_de_dados.csv \
+  -P id_var:ID_MUNICIP \
+  -P group_var:SG_UF_NOT
+```
+:::

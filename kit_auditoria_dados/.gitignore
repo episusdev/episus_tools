@@ -1,0 +1,16 @@
+# Dados de exemplo — não versionados (coloque sua base aqui)
+Base_de_dados*.csv
+Base_de_dados*.xlsx
+*.xlsx
+*.dbc
+*.dbf
+
+# Outputs do relatório
+*.html
+*.pdf
+
+# Cache Quarto
+.quarto/
+.Rproj.user/
+.Rhistory
+.RData
