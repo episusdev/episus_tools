@@ -8,7 +8,7 @@ Para instalar
 
 ```r
 # se usar devtools
-remotes::install_github("mariojrepisus/episusTools")
+remotes::install_github("episusdev/episus_tools")
 
 # É interessante também instalar pacotes usualmente utilizados, inclusive o microdatasus e read.dbc
 # Para isso, não esqueça de instalar o rtools correspondente a sua versão do R
