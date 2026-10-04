@@ -1,84 +1,55 @@
-
 #' Cria Infraestrutura Mínima de Pastas para um Projeto
 #'
 #' Cria uma estrutura de diretórios padronizada dentro do diretório raiz do
-#' projeto R (detectado via `here::here()`). As pastas criadas organizam os
-#' dados brutos, auxiliares, tratados, intermediários e os resultados
-#' (descritivo, bivariada, multivariada e acurácia).
+#' projeto R. Se `pasta_referencia` for `NULL`, a função usa o diretório de
+#' trabalho atual (`getwd()`). As pastas criadas organizam os dados brutos,
+#' auxiliares, tratados, intermediários e os resultados (descritivo,
+#' bivariada, multivariada e acurácia).
 #'
-#' @return Invisível (`NULL`). As pastas são criadas como efeito colateral.
+#' @param pasta_referencia Caminho base do projeto. Se `NULL`, usa o diretório
+#'   atual de trabalho.
+#'
+#' @return Um vetor nomeado com os caminhos em string das pastas criadas.
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#'   criar_pastas()
+#'   pastas <- criar_pastas()
+#'   pastas[["bancos_brutos"]]
 #' }
 
-criar_pastas = function(){
-  library(here)
-  ## separando pastas
-  pasta_geral =  paste0(here(), "/")
-  
-  pasta_bancos = if (!dir.exists(paste0(pasta_geral, "bancos_brutos/"))) {
-    dir.create(paste0(pasta_geral, "bancos_brutos/"))
-    paste0(pasta_geral, "bancos_brutos/")
+criar_pastas <- function(pasta_referencia = NULL) {
+  base <- if (is.null(pasta_referencia)) {
+    getwd()
   } else {
-    paste0(pasta_geral, "bancos_brutos/")
+    pasta_referencia
   }
-  
-  pasta_aux = if (!dir.exists(paste0(pasta_geral, "dados auxiliares/"))) {
-    dir.create(paste0(pasta_geral, "dados auxiliares/"))
-    paste0(pasta_geral, "dados auxiliares/")
-  } else {
-    paste0(pasta_geral, "dados auxiliares/")
-  }  
-  
-  pasta_trat = if (!dir.exists(paste0(pasta_geral, "dados_tratados/"))) {
-    dir.create(paste0(pasta_geral, "dados_tratados/"))
-    paste0(pasta_geral, "dados_tratados/")
-  } else {
-    paste0(pasta_geral, "dados_tratados/")
-  } 
-  
-  pasta_inter = if (!dir.exists(paste0(pasta_geral, "dados_inter/"))) {
-    dir.create(paste0(pasta_geral, "dados_inter/"))
-    paste0(pasta_geral, "dados_inter/")
-  } else {
-    paste0(pasta_geral, "dados_inter/")
-  } 
-  
-  pasta_resultados = if (!dir.exists(paste0(pasta_geral, "resultados/"))) {
-    dir.create(paste0(pasta_geral, "resultados/"))
-    paste0(pasta_geral, "resultados/")
-  } else {
-    paste0(pasta_geral, "resultados/")
-  }  
-  
-  pasta_desc = if (!dir.exists(paste0(pasta_resultados, "descritivo/"))) {
-    dir.create(paste0(pasta_resultados, "descritivo/"))
-    paste0(pasta_resultados, "descritivo/")
-  } else {
-    paste0(pasta_resultados, "descritivo/")
-  } 
-  
-  pasta_biv = if (!dir.exists(paste0(pasta_resultados, "bivariada/"))) {
-    dir.create(paste0(pasta_resultados, "bivariada/"))
-    paste0(pasta_resultados, "bivariada/")
-  } else {
-    paste0(pasta_resultados, "bivariada/")
-  } 
-  
-  pasta_mult = if (!dir.exists(paste0(pasta_resultados, "multivariada/"))) {
-    dir.create(paste0(pasta_resultados, "multivariada/"))
-    paste0(pasta_resultados, "multivariada/")
-  } else {
-    paste0(pasta_resultados, "multivariada/")
-  } 
-  
-  pasta_acr = if (!dir.exists(paste0(pasta_resultados, "acuracia/"))) {
-    dir.create(paste0(pasta_resultados, "acuracia/"))
-    paste0(pasta_resultados, "acuracia/")
-  } else {
-    paste0(pasta_resultados, "acuracia/")
-  } 
+
+  base <- normalizePath(base, winslash = "/", mustWork = FALSE)
+
+  criar_dir <- function(caminho) {
+    if (!dir.exists(caminho)) {
+      dir.create(caminho, recursive = TRUE, showWarnings = FALSE)
+    }
+    normalizePath(caminho, winslash = "/", mustWork = FALSE)
+  }
+
+  pastas <- c(
+    bancos_brutos = criar_dir(file.path(base, "bancos_brutos")),
+    dados_auxiliares = criar_dir(file.path(base, "dados auxiliares")),
+    dados_tratados = criar_dir(file.path(base, "dados_tratados")),
+    dados_inter = criar_dir(file.path(base, "dados_inter")),
+    resultados = criar_dir(file.path(base, "resultados")),
+    descritivo = criar_dir(file.path(base, "resultados", "descritivo")),
+    bivariada = criar_dir(file.path(base, "resultados", "bivariada")),
+    multivariada = criar_dir(file.path(base, "resultados", "multivariada")),
+    acuracia = criar_dir(file.path(base, "resultados", "acuracia"))
+  )
+
+  for (nm in names(pastas)) {
+    obj_name <- paste0("pasta_", nm)
+    assign(obj_name, pastas[[nm]], envir = .GlobalEnv)
+  }
+
+  return(pastas)
 }
