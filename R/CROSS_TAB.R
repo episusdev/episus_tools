@@ -1,11 +1,11 @@
-#' Tabulação cruzada com teste qui-quadrado
+#' Tabulação cruzada com teste qui-quadrado, odds e riskratio
 #'
 #' @param data Data frame.
 #' @param var_exposicao Nome da primeira variável.
 #' @param var_desfecho Nome da segunda variável.
 #' @return Lista com os valores das tabelas e os calculos de oddsratio e riskratio
 #' @export
-TABLE <- function(data, 
+CROSS_TAB <- function(data, 
                        var_exposicao, 
                        var_desfecho, 
                        exp_pos = NULL, 
