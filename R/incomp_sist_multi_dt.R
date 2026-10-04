@@ -23,31 +23,33 @@ incomp_sist_multi_dt <- function(banco, variavel, nulo = NA, nivel_validos = 90)
 
   resultados <- purrr::map_dfr(variaveis, function(var) {
     var_sym <- rlang::ensym(var)
+    x <- banco[[as.character(var_sym)]]
 
-    banco <- banco |>
-      dplyr::mutate(!!var_sym := lubridate::dmy(!!var_sym))
+    x_dt <- suppressWarnings(lubridate::dmy(x))
 
-    valores <- banco |>
-      dplyr::filter(!is.na(!!var_sym)) |>
-      dplyr::distinct(!!var_sym) |>
-      dplyr::pull(!!var_sym)
+    n_total <- length(x)
+    validos <- sum(!is.na(x_dt))
 
-    validos <- banco |> dplyr::filter(!!var_sym %in% valores) |> nrow()
-    nulos   <- banco |> dplyr::filter(is.na(!!var_sym) | !!var_sym %in% nulo) |> nrow()
+    nulos_esperados <- if (length(nulo) == 1L && is.na(nulo)) {
+      rep(FALSE, n_total)
+    } else {
+      as.character(x) %in% as.character(nulo)
+    }
+
+    nulos <- sum(is.na(x_dt) | is.na(x) | trimws(as.character(x)) == "" | nulos_esperados)
+    pct_validos <- if (n_total == 0) 0 else round(validos / n_total * 100, 2)
+    pct_nulos <- if (n_total == 0) 0 else round(nulos / n_total * 100, 1)
 
     tibble::tibble(
-      "Variavel"         = as.character(var_sym),
-      "N de obs."             = nrow(banco),
-      "Validos"         = validos,
-      "% validos"       = round(validos / nrow(banco) * 100, 2),
-      "Nulos"                 = nulos,
-      "% nulos"               = round(nulos   / nrow(banco) * 100, 1),
-      "Avaliacao"  = dplyr::case_when(
-        (validos / nrow(banco) * 100) >= nivel_validos ~ "Adequado",
-        TRUE ~ "Inadequado"
-      ),
-      "Data minima"     = min(banco[[as.character(var_sym)]], na.rm = TRUE),
-      "Data maxima"     = max(banco[[as.character(var_sym)]], na.rm = TRUE)
+      "Variavel"     = as.character(var_sym),
+      "N de obs."    = n_total,
+      "Validos"      = validos,
+      "% validos"    = pct_validos,
+      "Nulos"        = nulos,
+      "% nulos"      = pct_nulos,
+      "Avaliacao"    = dplyr::if_else(pct_validos >= nivel_validos, "Adequado", "Inadequado"),
+      "Data minima"  = if (sum(!is.na(x_dt)) == 0) NA else min(x_dt, na.rm = TRUE),
+      "Data maxima"  = if (sum(!is.na(x_dt)) == 0) NA else max(x_dt, na.rm = TRUE)
     )
   })
 
