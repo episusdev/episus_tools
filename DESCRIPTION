@@ -2,7 +2,7 @@ Package: episus_tools
 Type: Package
 Title: Ferramentas para Análise Epidemiológica
 Version: 0.1.0
-Authors@R: person("Mario", "Junior", email = "mario.junior@example.com", role = c("aut", "cre"))
+Authors@R: person("Mario", "Junior", email = "mariojr.episus@gmail.com", role = c("aut", "cre"))
 Description: Funções utilitárias para análise de dados epidemiológicos, desenvolvidas para os treinandos do EpiSUS e outras áreas de análise de dados na SVSA.
 License: MIT + file LICENSE
 Encoding: UTF-8
