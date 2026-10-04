@@ -1,10 +1,19 @@
-#' Tabulação cruzada com teste qui-quadrado, odds e riskratio
+#' Tabulação cruzada interativa com testes estatísticos
 #'
-#' @param data Data frame.
-#' @param var_exposicao Nome da primeira variável.
-#' @param var_desfecho Nome da segunda variável.
-#' @return Lista com os valores das tabelas e os calculos de oddsratio e riskratio
+#' Gera uma tabela de contingência 2x2 e calcula as razões de chance (Odds Ratio) e risco (Risk Ratio), além de aplicar testes de hipótese (Qui-quadrado e Exato de Fisher). Permite seleção interativa de pontos de corte para variáveis numéricas e categorias para variáveis de texto.
+#'
+#' @param data Data frame contendo a base de dados.
+#' @param var_exposicao Nome da variável de exposição (como string).
+#' @param var_desfecho Nome da variável de desfecho (como string).
+#' @param exp_pos Valor para o grupo Exposto. Se `NULL`, solicita via console.
+#' @param exp_neg Valor para o grupo Não Exposto. Se `NULL`, solicita via console.
+#' @param desf_pos Valor para o Desfecho Positivo/Caso. Se `NULL`, solicita via console.
+#' @param desf_neg Valor para o Desfecho Negativo/Controle. Se `NULL`, solicita via console.
+#'
+#' @return Uma lista com a tabela 2x2 (`tabela_2x2`), `oddsratio`, `riskratio`, `chi_quadrado` e `exato_fisher`.
 #' @export
+#'
+#' @examples
 CROSS_TAB <- function(data, 
                        var_exposicao, 
                        var_desfecho, 
