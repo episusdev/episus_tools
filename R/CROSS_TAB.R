@@ -1,10 +1,9 @@
 #' Tabulação cruzada com teste qui-quadrado
 #'
 #' @param data Data frame.
-#' @param var1 Nome da primeira variável (string).
-#' @param var2 Nome da segunda variável (string).
-#' @return Lista com `table` (tabulação cruzada) e `chi_square` (resultado do
-#'   teste qui-quadrado).
+#' @param var_exposicao Nome da primeira variável.
+#' @param var_desfecho Nome da segunda variável.
+#' @return Lista com os valores das tabelas e os calculos de oddsratio e riskratio
 #' @export
 TABLE <- function(data, 
                        var_exposicao, 
